@@ -27,10 +27,10 @@ class Checker:
     def __init__(self, client: TelegramClient, delay: float):
         self.client = client
         self.delay = delay
-        self._lock = asyncio.Lock()  # один запрос за раз на весь бот — так меньше флуда
+        self.lock = asyncio.Lock()  # один запрос за раз на весь бот — так меньше флуда
 
     async def check(self, username: str) -> Status:
-        async with self._lock:
+        async with self.lock:
             while True:
                 try:
                     ok = await self.client(CheckUsernameRequest(username))

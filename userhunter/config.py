@@ -15,6 +15,8 @@ class Config:
     check_delay: float
     session_name: str
     db_path: str
+    auto_grab: bool
+    grab_about: str
 
 
 def load_config() -> Config:
@@ -35,4 +37,6 @@ def load_config() -> Config:
         check_delay=max(0.5, float(os.getenv("CHECK_DELAY", "3"))),
         session_name=os.getenv("SESSION_NAME", "checker"),
         db_path=os.getenv("DB_PATH", "usernames.db"),
+        auto_grab=os.getenv("AUTO_GRAB", "0").strip().lower() in ("1", "true", "yes", "on"),
+        grab_about=os.getenv("GRAB_ABOUT", ""),
     )
