@@ -29,7 +29,7 @@ class Config:
     max_checks_per_search: int = 200  # после стольких проверок поиск сдаётся
     free_checks_per_day: int = 10    # бесплатных ручных проверок в сутки
     max_parallel_hunts: int = 2      # одновременных поисков (остальные ждут в очереди)
-    packs: tuple[Pack, ...] = field(default_factory=lambda: (Pack(1, 25), Pack(5, 100), Pack(15, 250)))
+    packs: tuple[Pack, ...] = field(default_factory=lambda: (Pack(1, 10), Pack(5, 40), Pack(15, 100)))
     support: str = ""                # контакт поддержки для /paysupport
     web_prefilter: bool = True       # быстрый отсев занятых юзов через t.me
 
@@ -75,7 +75,7 @@ def load_config() -> Config:
         max_checks_per_search=num("MAX_CHECKS_PER_SEARCH", 200),
         free_checks_per_day=num("FREE_CHECKS_PER_DAY", 10),
         max_parallel_hunts=max(1, num("MAX_PARALLEL_HUNTS", 2)),
-        packs=parse_packs(os.getenv("PACKS", "1:25,5:100,15:250")),
+        packs=parse_packs(os.getenv("PACKS", "1:10,5:40,15:100")),
         support=os.getenv("SUPPORT", ""),
         web_prefilter=os.getenv("WEB_PREFILTER", "1").strip().lower() in ("1", "true", "yes", "on"),
     )

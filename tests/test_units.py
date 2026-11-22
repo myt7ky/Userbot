@@ -72,3 +72,18 @@ def test_daily_checks():
     assert db.use_checks(1, 5, 3) == 1
     assert db.use_checks(1, 1, 3) == 0
     assert db.checks_left(1, 3) == 0
+
+
+def test_dictionaries_have_no_comment_junk():
+    from userhunter.generator import RU_WORDS, WORDS
+
+    for words in (WORDS, RU_WORDS):
+        assert words and all(w.isascii() and w.isalpha() for w in words)
+    assert "digits" not in WORDS and "rabota" in RU_WORDS
+
+
+def test_default_prices():
+    from userhunter.config import Config
+
+    cfg = Config(bot_token="1:x", api_id=1, api_hash="x", admin_ids=frozenset())
+    assert cfg.packs[0] == Pack(1, 10)

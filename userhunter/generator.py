@@ -24,17 +24,18 @@ def is_valid(name: str) -> bool:
     return bool(_VALID.match(name))
 
 
-def _load_words() -> list[str]:
-    path = Path(__file__).with_name("words.txt")
-    words = {
-        w.strip().lower()
-        for w in path.read_text(encoding="utf-8").split()
-        if w.strip() and not w.startswith("#")
-    }
-    return sorted(w for w in words if w.isalpha() and 5 <= len(w) <= 12)
+def _load_words(filename: str, min_len: int = 5, max_len: int = 12) -> list[str]:
+    """Слова из файла рядом с модулем. Строки, начинающиеся с #, — комментарии."""
+    words: set[str] = set()
+    for line in Path(__file__).with_name(filename).read_text(encoding="utf-8").splitlines():
+        if line.lstrip().startswith("#"):
+            continue
+        words.update(w.lower() for w in line.split())
+    return sorted(w for w in words if w.isascii() and w.isalpha() and min_len <= len(w) <= max_len)
 
 
-WORDS: list[str] = _load_words()
+WORDS: list[str] = _load_words("words.txt")
+RU_WORDS: list[str] = _load_words("words_ru.txt", min_len=3, max_len=14)
 
 
 # ---------- маски ----------
@@ -111,7 +112,57 @@ def gen_word_digit() -> str:
     return w + random.choice(["0", "1", "7", "00", "01", "13", "69", "77", "99", "777", "1337", "404"])
 
 
+# ---------- русские слова латиницей ----------
+_RU_PRE = ["moy", "tvoy", "prosto", "ya", "eto", "vsem", "nash", "super", "mega", "tot", "samyy"]
+_RU_ADJ = ["zloy", "dobryy", "tihiy", "dikiy", "milyy", "umnyy", "lunnyy", "nochnoy", "zolotoy",
+           "sladkiy", "hitryy", "smelyy", "veselyy", "temnyy", "belyy", "krutoy", "nezhnyy", "malyy"]
+_RU_NOUNS = ["kot", "lis", "volk", "drug", "brat", "son", "mir", "dom", "sad", "chai", "med", "les",
+             "zver", "ezh", "kit", "lev", "tigr", "orel", "voron", "geroy", "korol", "master", "drakon"]
+
+
+def gen_ru() -> str:
+    """Русские слова латиницей: rabota, kotik, moykot, zloykot, prostodrug."""
+    r = random.random()
+    single = [w for w in RU_WORDS if len(w) >= 5]
+    if r < 0.4:
+        return random.choice(single)
+    if r < 0.7:
+        return random.choice(_RU_ADJ) + random.choice(_RU_NOUNS)
+    if r < 0.9:
+        return random.choice(_RU_PRE) + random.choice([w for w in RU_WORDS if len(w) <= 7])
+    return random.choice(single) + random.choice(["ok", "ik", "chik", "ka", "_ru", "s", "ya"])
+
+
+# ---------- «как дорогие»: по мотивам юзов, которые дорого продаются на Fragment ----------
+# Дороже всего уходят короткие словарные и «брендовые» юзы на ходовые темы (news, crypto, casino,
+# shop…). Короткие давно заняты, поэтому ищем похожие: тема + брендовое окончание и пары слов.
+_THEMES = ["news", "crypto", "coin", "nft", "ton", "bet", "casino", "shop", "store", "market", "deal",
+           "money", "cash", "trade", "game", "play", "music", "film", "art", "design", "photo", "style",
+           "beauty", "food", "travel", "auto", "tech", "code", "dev", "ai", "data", "cloud", "web", "app",
+           "sport", "fit", "health", "home", "kids", "book", "learn", "job", "work", "biz", "promo", "vpn"]
+_BRAND = ["hub", "lab", "pro", "club", "zone", "land", "base", "box", "spot", "wave", "now", "top",
+          "one", "go", "ly", "ify", "point", "space", "house", "world", "daily", "life", "mania", "verse"]
+_ADJ_EN = ["dark", "cold", "neon", "wild", "lazy", "happy", "silent", "lucky", "royal", "true", "pure",
+           "deep", "soft", "bold", "red", "blue", "black", "white", "gold", "silver", "cosmic", "night",
+           "sunny", "frozen", "golden", "secret", "magic", "urban", "retro", "cyber"]
+_NOUN_EN = ["fox", "wolf", "cat", "owl", "bear", "lion", "tiger", "shark", "raven", "panda", "moon",
+            "sun", "star", "sky", "sea", "wave", "fire", "storm", "rain", "rose", "leaf", "stone",
+            "ghost", "king", "queen", "knight", "pixel", "byte", "coffee", "candy", "dream", "soul"]
+
+
+def gen_brand() -> str:
+    """«Дорогой» вид: cryptohub, newsbox, artlab, darkfox, neonwolf, goldcoin."""
+    r = random.random()
+    if r < 0.45:
+        return random.choice(_THEMES) + random.choice(_BRAND)
+    if r < 0.55:
+        return random.choice(["get", "my", "the", "go", "join"]) + random.choice(_THEMES)
+    return random.choice(_ADJ_EN) + random.choice(_NOUN_EN + _THEMES)
+
+
 MODES: dict[str, tuple[str, Callable[[], str]]] = {
+    "brand": ("💎 Как дорогие", gen_brand),
+    "ru": ("🇷🇺 Русские слова", gen_ru),
     "word": ("📖 Словарные слова", gen_word),
     "pron": ("🗣 Читаемые 5–6 букв", gen_pronounceable),
     "pattern": ("🔁 Повторы ABABA/AABBA", gen_pattern),

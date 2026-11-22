@@ -1,0 +1,24 @@
+# Русские слова латиницей (для стиля 🇷🇺). Схема: ж=zh ч=ch ш=sh щ=sch ц=ts й/ы=y ю=yu я=ya х=h ё=yo
+# --- существительные ---
+rabota dengi mechta zhizn lyubov schaste druzhba svoboda sila udacha pobeda slava volya
+solnce zvezda nebo luna vesna leto osen zima utro vecher noch rassvet zakat raduga oblako
+more okean reka ozero gora les pole veter dozhd sneg grom molniya ogon voda zemlya kamen
+kotik kotyara kiska sobaka schenok medved lisa lisitsa volk zayac belka ezhik sova orel sokol
+voron lebed delfin kit akula tigr lev pantera drakon feniks edinorog babochka pchela
+dom domik sad gorod derevnya ulica most doroga put kraj mir strana rodina
+chai kofe sahar med moloko hleb pirog blin tort konfeta yabloko vishnya malina klubnika
+arbuz limon apelsin mango ananas oreh shokolad morozhenoe pelmeni borsch kasha
+kniga muzyka pesnya tanec kino teatr igra sport futbol hokkey boks shahmaty
+drug brat sestra mama papa babushka dedushka syn doch semya lyudi chelovek
+korol koroleva princ princessa rycar geroy voin ohotnik master boss shef lider
+zoloto serebro almaz rubin izumrud zhemchug kristall magiya chudo skazka legenda
+dusha serdce mysl ideya smysl tayna sekret son mechtatel romantik poet hudozhnik
+vremya minuta chas den nedelya mesyac god vechnost moment
+# --- прилагательные ---
+krasivyy dobryy zloy umnyy hitryy smelyy silnyy bystryy tihiy veselyy grustnyy
+nezhnyy sladkiy goryachiy holodnyy temnyy svetlyy chernyy belyy krasnyy siniy zelenyy
+zolotoy serebryanyy dikiy svobodnyy schastlivyy lunnyy solnechnyy zvezdnyy nochnoy
+# --- сленг и прикольное ---
+krasava bratan bratishka chuvak kent zhiza kayf ogon top imba vayb vaybik
+lyalya zaya solnyshko kotenok malysh pupsik milash milota prikol ugar zhest
+shalun bandit hulligan pacan devchonka krutoy klassnyy norm laskovyy

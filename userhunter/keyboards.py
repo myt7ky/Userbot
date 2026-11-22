@@ -20,6 +20,8 @@ MENU_BUTTONS = {BTN_SEARCH, BTN_CHECK, BTN_BUY, BTN_PROFILE, BTN_HELP, BTN_ADMIN
 
 # режим генератора → подпись кнопки. Порядок = порядок кнопок.
 STYLES: dict[str, str] = {
+    "brand": "💎 Как дорогие",
+    "ru": "🇷🇺 Русские слова",
     "pron": "🗣 Читаемые",
     "word": "📖 Слова",
     "affix": "✨ Слово+",
