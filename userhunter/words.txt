@@ -1,0 +1,26 @@
+# Словарь для режимов word / affix / digits. Добавляйте свои слова — по одному или через пробел.
+abyss acorn adept aegis agent alien alpha amber angel anvil apex arcade arch arrow aspen astra atlas atom aura aurora avian axiom azure
+badge baron basil beast birch bison blade blaze blitz bloom bliss boost brave bravo breeze brick bronze brook brute buzz
+cabin cadet camel candy canyon cargo carbon cedar chaos charm chase chief cider cinema cipher citadel citrus civic clash cliff cloud clover cobra comet coral cosmic cosmos crane crash crown crypto crystal cube cyber cyclone
+daisy dance dawn delta demon depth desert diesel digit disco dodge dolphin draft dragon dream drift drone dune dusk dwarf
+eagle earth eclipse echo eden elder elite ember empire enigma epic equinox ether ethos evoke
+fable falcon fancy fauna feast ferro fever fiber field flame flash fleet flint flora flux focus forge fossil frost fusion
+galaxy gamma garden gecko genius ghost giant glide glint globe glory glyph gnome golem grace grain graph gravity griffin grove guard guild
+habit halo harbor haven hawk hazel heart helix hero honey horizon hunter hydra hyper
+icon igloo index indigo inferno ivory
+jade jaguar jasper jelly jester jewel joker jolly juice jumbo jungle juno jupiter
+karma kayak kernel kettle khaki kinetic king kiwi knight koala kraken
+lagoon lambda lancer laser latte lava legend lemon lemur level light lilac lime linen lion lotus lucid lucky lunar lynx lyric
+magic magma magnet mango manor maple marble mars matrix maze meadow medal melon mentor mercury merit meteor metro mint mirage mocha monarch mood mosaic motion mystic myth
+nebula nectar neon nerve nexus nimbus ninja noble nomad north nova nugget
+oasis ocean olive omega onyx opal optic oracle orbit orchid origin otter oxide ozone
+panda panther paper paradox pastel peach pearl pebble pepper phantom phoenix photon pilot pinnacle pixel plasma pluto polar poppy prime prism proton pulse puma pyramid
+quake quantum quartz quasar quest quill quiet
+radar radiant radio raven realm rebel reef relic retro rhino rhythm ripple river robin robot rocket rogue ronin royal ruby rune rust
+saber safari sage sahara salt samurai sapphire saturn scout shadow shark shell sierra signal silk silver siren sketch skull slate smoke snake solar sonic spark spectra sphinx spice spider spirit spring sprout squad stark stealth stellar storm stone strike studio summit sunny super surge swift sword
+talon tango tempo terra thunder tiger titan token topaz torch totem tower toxic trail trend tribe trick tropic tulip tundra turbo twist
+ultra umbra unity urban utopia
+valor vapor vector velvet venom venus vertex vibe viking villa viper virtual vision vivid volcano volt vortex voyage
+walnut waltz wander wave whale whisper wild willow wizard wolf wonder
+xenon yacht yeti yonder yummy
+zebra zenith zephyr zero zest zinc zodiac zone
