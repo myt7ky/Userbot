@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import itertools
+import time
 import html
 import logging
 from dataclasses import dataclass, field
@@ -17,11 +19,15 @@ from .checker import Checker, Status
 from .config import Config
 from .db import Database
 from .generator import candidates, coolness, is_valid
+from .prefilter import WebPrefilter
 from .grabber import GRAB_TEXT, STOP_RESULTS, Grabber, GrabResult
 
 log = logging.getLogger(__name__)
 
 ADMIN_CHECKS_MULTIPLIER = 5  # админу разрешаем искать дольше
+BATCH = 8         # сколько вариантов обрабатываем за раз
+PROGRESS_EVERY = 2.0  # не чаще раза в 2 с обновляем сообщение с прогрессом
+SCAN_FACTOR = 10  # всего вариантов можно просмотреть в 10 раз больше, чем проверить аккаунтом
 
 
 @dataclass
@@ -30,6 +36,7 @@ class App:
     checker: Checker
     db: Database
     grabber: Grabber
+    prefilter: WebPrefilter | None = None
     autograb: dict[int, bool] = field(default_factory=dict)
     hunts: dict[int, asyncio.Task] = field(default_factory=dict)
     sem: asyncio.Semaphore = field(init=False)
@@ -68,14 +75,15 @@ class App:
         max_checks = self.cfg.max_checks_per_search * (ADMIN_CHECKS_MULTIPLIER if admin else 1)
         grab = admin and self.autograb_on(user_id)
         found: dict[str, GrabResult | None] = {}
-        checked = 0
+        checked = 0   # проверено через аккаунт (медленно)
+        scanned = 0   # всего просмотрено вариантов
         note = ""
         failed = False
         message_id: int | None = None
 
         def progress(done: bool) -> str:
             head = "🏁 Поиск завершён" if done else "🔎 Ищу"
-            text = f"{head}: {title}\nПроверено вариантов: {checked} · найдено: {len(found)}/{count}"
+            text = f"{head}: {title}\nПроверено вариантов: {scanned} · найдено: {len(found)}/{count}"
             if note:
                 text += f"\n{note}"
             if not done and found:
@@ -93,23 +101,41 @@ class App:
                 else:
                     await self._edit(bot, chat_id, message_id, progress(False), kb.stop())
 
-                for name in candidates(skip=self.db.recently_checked, **gen_kwargs):
-                    if len(found) >= count or checked >= max_checks:
+                last_edit = time.monotonic()
+                gen = candidates(skip=self.db.recently_checked, **gen_kwargs)
+                batch_size = max(BATCH, self.checker.workers * 2)
+                while len(found) < count and checked < max_checks and scanned < max_checks * SCAN_FACTOR:
+                    batch = list(itertools.islice(gen, batch_size))
+                    if not batch:
                         break
-                    status = await self.checker.check(name)
-                    checked += 1
-                    self.db.save(name, status.value, coolness(name))
-                    if status is Status.FREE:
-                        found[name] = None
-                        self.db.add_find(user_id, name)
-                        if grab:
-                            res = await self.grabber.grab(name)
-                            found[name] = None if res in STOP_RESULTS else res
-                            if res in STOP_RESULTS:
-                                grab = False
-                                note = f"⚠️ Автозахват выключен: {GRAB_TEXT[res]}"
-                        await self._edit(bot, chat_id, message_id, progress(False), kb.stop())
-                    elif checked % 15 == 0:
+                    scanned += len(batch)
+                    # 1) быстрый отсев явно занятых через t.me (параллельно)
+                    maybe = await self.prefilter.maybe_free(batch) if self.prefilter else batch
+                    for name in set(batch) - set(maybe):
+                        self.db.save(name, Status.TAKEN.value, coolness(name))
+                    # 2) точная проверка через аккаунты: порциями по числу аккаунтов (они работают параллельно),
+                    #    пока не наберём нужное количество
+                    workers = self.checker.workers
+                    for i in range(0, len(maybe), workers):
+                        if len(found) >= count or checked >= max_checks:
+                            break
+                        chunk = maybe[i:i + workers]
+                        statuses = await asyncio.gather(*(self.checker.check(n) for n in chunk))
+                        checked += len(chunk)
+                        for name, status in zip(chunk, statuses):
+                            self.db.save(name, status.value, coolness(name))
+                            if status is not Status.FREE or len(found) >= count:
+                                continue  # лишние свободные остаются в базе — админ видит их в «Лучших находках»
+                            found[name] = None
+                            self.db.add_find(user_id, name)
+                            if grab:
+                                res = await self.grabber.grab(name)
+                                found[name] = None if res in STOP_RESULTS else res
+                                if res in STOP_RESULTS:
+                                    grab = False
+                                    note = f"⚠️ Автозахват выключен: {GRAB_TEXT[res]}"
+                    if time.monotonic() - last_edit > PROGRESS_EVERY:
+                        last_edit = time.monotonic()
                         await self._edit(bot, chat_id, message_id, progress(False), kb.stop())
         except asyncio.CancelledError:
             note = "⏹ Остановлено вами."

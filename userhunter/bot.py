@@ -17,6 +17,7 @@ from .core import App
 from .db import Database
 from .grabber import Grabber
 from .handlers import build_router
+from .prefilter import WebPrefilter
 
 log = logging.getLogger(__name__)
 
@@ -63,25 +64,40 @@ async def main() -> None:
     if not cfg.admin_ids:
         raise SystemExit("Заполните ADMIN_IDS в .env — нужен хотя бы один администратор.")
 
-    client = TelegramClient(cfg.session_name, cfg.api_id, cfg.api_hash)
-    await client.connect()
-    if not await client.is_user_authorized():
-        raise SystemExit("Сессия не авторизована. Сначала выполните: python -m userhunter.login")
+    clients = []
+    for name in cfg.sessions:
+        client = TelegramClient(name, cfg.api_id, cfg.api_hash)
+        await client.connect()
+        if not await client.is_user_authorized():
+            log.warning("Сессия %s не авторизована — пропускаю (python -m userhunter.login)", name)
+            await client.disconnect()
+            continue
+        me = await client.get_me()
+        log.info("Аккаунт-проверяльщик %s: %s", name, me.username or me.id)
+        clients.append(client)
+    if not clients:
+        raise SystemExit("Нет ни одной авторизованной сессии. Сначала выполните: python -m userhunter.login")
 
-    checker = Checker(client, cfg.check_delay)
+    checker = Checker(clients, cfg.check_delay)
     db = Database(cfg.db_path)
-    app = App(cfg=cfg, checker=checker, db=db, grabber=Grabber(checker, db, about=cfg.grab_about))
+    prefilter = WebPrefilter() if cfg.web_prefilter else None
+    if prefilter:
+        await prefilter.start()
+    app = App(cfg=cfg, checker=checker, db=db, grabber=Grabber(checker, db, about=cfg.grab_about),
+              prefilter=prefilter)
 
     bot = make_bot(cfg.bot_token)
     dp = build_dispatcher(app)
     await bot.set_my_commands(COMMANDS)
 
-    me = await client.get_me()
-    log.info("Проверяю через аккаунт %s, бот запускается…", me.username or me.id)
+    log.info("Аккаунтов для проверки: %d. Бот запускается…", len(clients))
     try:
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     finally:
-        await client.disconnect()
+        if prefilter:
+            await prefilter.close()
+        for client in clients:
+            await client.disconnect()
 
 
 if __name__ == "__main__":

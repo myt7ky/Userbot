@@ -31,6 +31,12 @@ class Config:
     max_parallel_hunts: int = 2      # одновременных поисков (остальные ждут в очереди)
     packs: tuple[Pack, ...] = field(default_factory=lambda: (Pack(1, 25), Pack(5, 100), Pack(15, 250)))
     support: str = ""                # контакт поддержки для /paysupport
+    web_prefilter: bool = True       # быстрый отсев занятых юзов через t.me
+
+    @property
+    def sessions(self) -> list[str]:
+        """SESSION_NAME может содержать несколько аккаунтов через запятую."""
+        return [s.strip() for s in self.session_name.split(",") if s.strip()]
 
 
 def parse_packs(raw: str) -> tuple[Pack, ...]:
@@ -71,4 +77,5 @@ def load_config() -> Config:
         max_parallel_hunts=max(1, num("MAX_PARALLEL_HUNTS", 2)),
         packs=parse_packs(os.getenv("PACKS", "1:25,5:100,15:250")),
         support=os.getenv("SUPPORT", ""),
+        web_prefilter=os.getenv("WEB_PREFILTER", "1").strip().lower() in ("1", "true", "yes", "on"),
     )

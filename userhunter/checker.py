@@ -1,16 +1,18 @@
 """Проверка доступности юзернейма через MTProto (account.checkUsername).
 
 Bot API не умеет проверять свободность юза, поэтому проверка идёт
-от имени вашего обычного аккаунта (Telethon-сессия). Сам аккаунт ничего
-не меняет — только спрашивает «свободен ли юз».
+от имени обычных аккаунтов (Telethon-сессии). Аккаунты ничего не меняют —
+только спрашивают «свободен ли юз». Аккаунтов может быть несколько:
+каждый проверяет со своей паузой, вместе — параллельно.
 """
 from __future__ import annotations
 
 import asyncio
 import enum
 import logging
+from typing import Any, Sequence
 
-from telethon import TelegramClient, errors
+from telethon import errors
 from telethon.tl.functions.account import CheckUsernameRequest
 
 log = logging.getLogger(__name__)
@@ -24,16 +26,25 @@ class Status(enum.Enum):
 
 
 class Checker:
-    def __init__(self, client: TelegramClient, delay: float):
-        self.client = client
+    def __init__(self, clients: Any | Sequence[Any], delay: float):
+        self.clients = list(clients) if isinstance(clients, (list, tuple)) else [clients]
+        self.client = self.clients[0]  # основной аккаунт — на нём же создаются каналы при захвате
         self.delay = delay
-        self.lock = asyncio.Lock()  # один запрос за раз на весь бот — так меньше флуда
+        self.lock = asyncio.Lock()     # для операций захвата на основном аккаунте
+        self._idle: asyncio.Queue = asyncio.Queue()
+        for c in self.clients:
+            self._idle.put_nowait(c)
+
+    @property
+    def workers(self) -> int:
+        return len(self.clients)
 
     async def check(self, username: str) -> Status:
-        async with self.lock:
+        client = await self._idle.get()  # ждём свободный аккаунт
+        try:
             while True:
                 try:
-                    ok = await self.client(CheckUsernameRequest(username))
+                    ok = await client(CheckUsernameRequest(username))
                     status = Status.FREE if ok else Status.TAKEN
                     break
                 except errors.FloodWaitError as e:
@@ -50,3 +61,5 @@ class Checker:
                     break
             await asyncio.sleep(self.delay)
             return status
+        finally:
+            self._idle.put_nowait(client)
