@@ -1,9 +1,15 @@
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+@dataclass(frozen=True)
+class Pack:
+    searches: int  # сколько поисков даёт пакет
+    stars: int     # цена в Telegram Stars
 
 
 @dataclass(frozen=True)
@@ -12,11 +18,29 @@ class Config:
     api_id: int
     api_hash: str
     admin_ids: frozenset[int]
-    check_delay: float
-    session_name: str
-    db_path: str
-    auto_grab: bool
-    grab_about: str
+    check_delay: float = 3.0
+    session_name: str = "checker"
+    db_path: str = "usernames.db"
+    auto_grab: bool = False
+    grab_about: str = ""
+    # ---- монетизация ----
+    free_searches: int = 1           # бесплатных поисков новому пользователю
+    results_per_search: int = 5      # сколько свободных юзов выдаёт один поиск
+    max_checks_per_search: int = 200  # после стольких проверок поиск сдаётся
+    free_checks_per_day: int = 10    # бесплатных ручных проверок в сутки
+    max_parallel_hunts: int = 2      # одновременных поисков (остальные ждут в очереди)
+    packs: tuple[Pack, ...] = field(default_factory=lambda: (Pack(1, 25), Pack(5, 100), Pack(15, 250)))
+    support: str = ""                # контакт поддержки для /paysupport
+
+
+def parse_packs(raw: str) -> tuple[Pack, ...]:
+    """"1:25,5:100" → (Pack(1, 25), Pack(5, 100))"""
+    packs = []
+    for part in raw.replace(" ", "").split(","):
+        if part:
+            searches, stars = part.split(":")
+            packs.append(Pack(int(searches), int(stars)))
+    return tuple(packs)
 
 
 def load_config() -> Config:
@@ -26,9 +50,10 @@ def load_config() -> Config:
             raise SystemExit(f"Не задана переменная окружения {name} (см. .env.example)")
         return value
 
-    admins = frozenset(
-        int(x) for x in os.getenv("ADMIN_IDS", "").replace(" ", "").split(",") if x
-    )
+    def num(name: str, default: int) -> int:
+        return int(os.getenv(name, str(default)))
+
+    admins = frozenset(int(x) for x in os.getenv("ADMIN_IDS", "").replace(" ", "").split(",") if x)
     return Config(
         bot_token=need("BOT_TOKEN"),
         api_id=int(need("API_ID")),
@@ -39,4 +64,11 @@ def load_config() -> Config:
         db_path=os.getenv("DB_PATH", "usernames.db"),
         auto_grab=os.getenv("AUTO_GRAB", "0").strip().lower() in ("1", "true", "yes", "on"),
         grab_about=os.getenv("GRAB_ABOUT", ""),
+        free_searches=num("FREE_SEARCHES", 1),
+        results_per_search=num("RESULTS_PER_SEARCH", 5),
+        max_checks_per_search=num("MAX_CHECKS_PER_SEARCH", 200),
+        free_checks_per_day=num("FREE_CHECKS_PER_DAY", 10),
+        max_parallel_hunts=max(1, num("MAX_PARALLEL_HUNTS", 2)),
+        packs=parse_packs(os.getenv("PACKS", "1:25,5:100,15:250")),
+        support=os.getenv("SUPPORT", ""),
     )

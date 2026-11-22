@@ -21,7 +21,7 @@ from telethon.tl.functions.channels import (
 from telethon.tl.types import InputChannel
 
 from .checker import Checker
-from .storage import Storage
+from .db import Database
 
 log = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ STOP_RESULTS = {GrabResult.LIMIT_PUBLIC, GrabResult.LIMIT_CHANNELS, GrabResult.F
 
 
 class Grabber:
-    def __init__(self, checker: Checker, storage: Storage, about: str = ""):
+    def __init__(self, checker: Checker, storage: Database, about: str = ""):
         self.checker = checker
         self.client = checker.client
         self.storage = storage
